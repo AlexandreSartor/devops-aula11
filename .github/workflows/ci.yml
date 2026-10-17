@@ -10,9 +10,31 @@ env:
   CLUSTER_NAME: aula-11
 
 jobs:
+  sonar:
+    name: Análise SonarQube
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # o Sonar usa o histórico do git
+
+      - name: Scan no SonarQube Cloud
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+            -Dsonar.projectName=${{ vars.SONAR_PROJECT_NAME }}
+            -Dsonar.sources=app,terraform,manifestos
+            -Dsonar.qualitygate.wait=true
+
   build:
     name: Build
     runs-on: self-hosted
+    needs: sonar
     steps:
       - name: Checkout
         uses: actions/checkout@v4
